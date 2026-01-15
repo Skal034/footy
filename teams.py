@@ -96,3 +96,70 @@ LEAGUES = {
     "USA_1": {"name": "MLS", "country": "USA", "tier": 2, "teams": 18, "local_weight": 0.55},
     "IND_1": {"name": "Indian Super League", "country": "India", "tier": 3, "teams": 12, "local_weight": 0.85},
 }
+
+import random
+from faker import Faker
+import player as p
+
+# Build Faker factories from the locale definitions
+fake_factory = {nation: Faker(info['locale']) for nation, info in locales.items()}
+
+# Helper: numeric FIFA points for each locale (extracted from locales)
+fifa_points = {nation: info.get('fifa') for nation, info in locales.items()}
+
+class Team:
+    def __init__(self, name, config, s_tier):
+        self.name = name
+        # Quality tiers (1: Top, 2: Mid, 3: Bottom) mapped to OVR
+        qualities = {1: [85, 78, 72], 2: [75, 68, 62], 3: [64, 58, 52]}
+        base_ovr = qualities[config['tier']][s_tier - 1]
+        
+        # 30 players per squad
+        self.players = [p.Player(self.name, config, base_ovr + random.randint(-3, 3)) for _ in range(30)]
+        self._assign_jerseys()
+
+    def _assign_jerseys(self):
+        """Star players get priority for iconic numbers; no duplicates allowed."""
+        used = set()
+        # High-rated players pick first
+        for p in sorted(self.players, key=lambda x: x.overall, reverse=True):
+            cat = p.POS_MAP[p.position]
+            assigned = False
+            for num in p.SHIRT_PREFS[cat]:
+                if num not in used:
+                    p.jersey = num
+                    used.add(num)
+                    assigned = True
+                    break
+            
+            if not assigned:
+                while True:
+                    rand_num = random.randint(1, 99)
+                    if rand_num not in used:
+                        p.jersey = rand_num
+                        used.add(rand_num)
+                        break
+
+
+# --- League and Team name generation for leagues ---
+def generate_league_team_names(country, count):
+    """Generates unique team names based on country geography and local naming styles."""
+    names = set()
+    fk = fake_factory.get(country, fake_factory['England'])
+    
+    cities = []
+    while len(set(cities)) < count:
+        cities.append(fk.city())
+    cities = list(set(cities))
+
+    for city in cities:
+        if country in ["Spain", 'Mexico', 'Argentina', 'Colombia']:
+            prefixes = ["Real", "Atlético", "Deportivo"]
+            name = f"{random.choice(prefixes)} {city}" if random.random() > 0.4 else f"{city} CF"
+        elif country in ["England", "Ireland", "Scotland", "USA"] and random.random() > 0.7:
+            suffixes = ["United", "City", "Town", "Rovers", "Athletic", "FC"]
+            name = f"{city} {random.choice(suffixes)}"
+        else:
+            name = f"{city} {fk.last_name()}s" 
+        names.add(name)
+    return list(names)[:count]

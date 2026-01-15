@@ -20,3 +20,101 @@ ALL_ATTRIBUTES = [
     "First_Touch", "Dribbling", "Short_Passing", "Long_Passing", "Finishing",
     "Tackling", "Attacking_Awareness", "Defensive_Awareness", "Composure", "Work_Rate"
 ]
+
+import random
+import teams
+import config_reader as cfg
+from deep_translator import GoogleTranslator
+
+class Player:
+    def __init__(self, team_name, league_config, base_rating):
+        self.team = team_name
+        self.league = league_config['name']
+        
+        # Localized Player Nationality — bias selection by FIFA points and team quality
+        # `_pick_nat` now returns a tuple: (country_name, locale_code)
+        self.nationality, self.locale = self._pick_nat(league_config, base_rating)
+        fk = teams.fake_factory.get(self.nationality, teams.fake_factory['England'])
+        
+        # --- ENHANCED NAME GENERATION ---
+        # We combine first_name_male and last_name to avoid "Dr.", "PhD", etc.
+        self.name = f"{fk.first_name_male()} {fk.last_name()}"
+        # Only attempt translation/romanization for locales likely to need it
+        #if self.locale in ("ja_JP", "ko_KR", "zh_CN", "bn_BD", "ar_DZ", "ar_SA", 
+        #                   "ru_RU", "ka_GE", "he_IL", "hy_AM", "el_GR", "fa_IR",
+        #                   "uk_UA"):
+        self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
+        
+        self.age = random.randint(cfg.AGE_MIN, cfg.AGE_MAX)
+        self.overall = max(40, min(99, int(random.gauss(base_rating, 4))))
+        self.position = random.choice(["GK"]*3 + ["CB", "LB", "RB"]*5 + ["DM", "CM", "AM"]*5 + ["LW", "RW", "ST"]*4)
+        self.jersey = None
+        
+        # Meta Stats (The "3")
+        self.meta = {
+            "Weak_Foot": random.randint(1,5), 
+            "Injury_Proneness": random.randint(0,100), 
+            "Versatility": random.randint(0,100)
+        }
+        
+        # Standardized Attributes (The 5/15) - Initialized to 0 to prevent CSV errors
+        self.stats = {attr: 0 for attr in ALL_ATTRIBUTES}
+        self._generate_stats()
+
+    def _pick_nat(self, conf, base_rating):
+        """Pick a nationality biased by league local_weight and FIFA points.
+
+        - With probability `local_weight` choose the league's country.
+        - Otherwise pick a nationality from `locales` weighted by FIFA points,
+          scaled by the team's base_rating so stronger teams more likely pick
+          players from higher-ranked nations.
+        """
+        if random.random() < conf['local_weight']:
+            country = conf['country']
+            return country, teams.locales.get(country, {}).get('locale', 'en_GB')
+
+        nations = list(teams.locales.keys())
+        # base multiplier: teams with higher base_rating slightly favour top nations
+        base_mult = 1.0 + ((base_rating - 60) / 100.0)
+        weights = [max(1.0, teams.fifa_points.get(n) * base_mult) for n in nations]
+        total = sum(weights)
+        # normalized selection
+        r = random.random() * total
+        upto = 0.0
+        for n, w in zip(nations, weights):
+            upto += w
+            if r <= upto:
+                return n, teams.locales.get(n, {}).get('locale', 'en_GB')
+        last = nations[-1]
+        return last, teams.locales.get(last, {}).get('locale', 'en_GB')
+
+    def _generate_stats(self):
+        """Assigns ratings based on whether the player is a GK or Outfield player."""
+        base = self.overall
+        if self.position == "GK":
+            for s in ["Reflexes", "Positioning", "Handling", "Distribution", "Sweeping"]:
+                self.stats[s] = max(1, min(99, base + random.randint(-5, 10)))
+        else:
+            # Outfield stats are index 5 onwards in the ALL_ATTRIBUTES list
+            for s in ALL_ATTRIBUTES[5:]:
+                self.stats[s] = max(1, min(99, base + random.randint(-8, 8)))
+            
+            # Positional bias logic
+            cat = POS_MAP[self.position]
+            if cat == "DEF": 
+                self.stats["Tackling"] += 10
+                self.stats["Defensive_Awareness"] += 5
+            if cat == "FWD": 
+                self.stats["Finishing"] += 10
+                self.stats["Attacking_Awareness"] += 5
+
+    def to_dict(self):
+        """Merges all player data into a single flat dictionary for CSV."""
+        d = {
+            "Name": self.name, "Team": self.team, "League": self.league, 
+            "Nat": self.nationality, "Pos": self.position, "Age": self.age, 
+            "OVR": self.overall, "Jersey": self.jersey
+        }
+        d.update(self.meta)
+        d.update(self.stats)
+        return d
