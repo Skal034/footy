@@ -1,5 +1,6 @@
 import random
 import csv
+import configparser
 from faker import Faker
 from deep_translator import GoogleTranslator
 import geography as geo # Importing the geography module to access locales
@@ -23,13 +24,13 @@ def generate_league_team_names(country, count):
     cities = list(set(cities))
 
     for city in cities:
-        if country in ["Spain", 'Mexico', 'Argentina', 'Colombia'] and random.random() > 0.5:
+        if country in ["Spain", 'Mexico', 'Argentina', 'Colombia']:
             prefixes = ["Real", "Atlético", "Deportivo"]
             name = f"{random.choice(prefixes)} {city}" if random.random() > 0.4 else f"{city} CF"
-        elif country in ["England", "Ireland", "Scotland", "USA"] and random.random() > 0.5:
+        elif country in ["England", "Ireland", "Scotland", "USA"] and random.random() > 0.7:
             suffixes = ["United", "City", "Town", "Rovers", "Athletic", "FC"]
             name = f"{city} {random.choice(suffixes)}"
-        elif country == "USA" and random.random() > 0.7:
+        else:
             name = f"{city} {fk.last_name()}s" 
         names.add(name)
     return list(names)[:count]
@@ -53,7 +54,7 @@ class Player:
         #                   "uk_UA"):
         self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
         
-        self.age = random.randint(16, 40)
+        self.age = random.randint(AGE_MIN, AGE_MAX)
         self.overall = max(40, min(99, int(random.gauss(base_rating, 4))))
         self.position = random.choice(["GK"]*3 + ["CB", "LB", "RB"]*5 + ["DM", "CM", "AM"]*5 + ["LW", "RW", "ST"]*4)
         self.jersey = None
@@ -165,7 +166,11 @@ class Team:
 if __name__ == "__main__":
     full_db = []
     print("Generating localized football universe...")
-    
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    AGE_MIN = config.getint('Players_Config', 'AGE_MIN', fallback=16)
+    AGE_MAX = config.getint('Players_Config', 'AGE_MAX', fallback=40)
+
     for l_id, conf in geo.LEAGUES.items():
         print(f"-> {conf['name']} ({conf['country']})")
         team_names = generate_league_team_names(conf['country'], conf['teams'])
