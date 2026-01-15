@@ -146,20 +146,154 @@ def generate_league_team_names(country, count):
     """Generates unique team names based on country geography and local naming styles."""
     names = set()
     fk = fake_factory.get(country, fake_factory['England'])
-    
+
     cities = []
     while len(set(cities)) < count:
         cities.append(fk.city())
-    cities = list(set(cities))
+    # preserve order while deduplicating
+    cities = list(dict.fromkeys(cities))
 
     for city in cities:
-        if country in ["Spain", 'Mexico', 'Argentina', 'Colombia']:
+        name = None
+
+        # Czechia
+        if country == "Czechia":
+            name = f"{city} {random.choice(['FK','SK','AC','FC'])}"
+
+        # Poland
+        elif country == "Poland":
+            if random.random() > 0.5:
+                name = f"{random.choice(['KS','Górnik','Lech','Legia'])} {city}"
+            else:
+                name = f"{city} {random.choice(['FC','KS'])}"
+
+        # Scotland
+        elif country == "Scotland":
+            suffixes = ["United", "City", "Town", "Rovers", "Athletic", "FC", "RFC"]
+            name = f"{city} {random.choice(suffixes)}"
+
+        # Ireland
+        elif country == "Ireland":
+            suffixes = ["United", "Rovers", "Athletic", "FC", "AFC"]
+            name = f"{city} {random.choice(suffixes)}"
+
+        # India
+        elif country == "India":
+            patterns = [f"{city} FC", f"{city} City", f"{city} United", f"{city} Blasters", f"{fk.last_name()} FC"]
+            name = random.choice(patterns)
+
+        # South Korea
+        elif country == "South Korea":
+            name = f"{city} {random.choice(['FC','SC','United'])}"
+
+        # Colombia (handle common misspelling 'Columbia' as well)
+        elif country in ["Colombia", "Columbia"]:
+            prefixes = ["Atlético", "Deportivo", "Independiente", "Club"]
+            name = f"{random.choice(prefixes)} {city}" if random.random() > 0.4 else f"{city} FC"
+
+        # Chile
+        elif country == "Chile":
+            prefixes = ["Universidad", "Colo-Colo", "Deportivo", "Club"]
+            name = f"{random.choice(prefixes)} {city}" if random.random() > 0.4 else f"{city} FC"
+
+        # Iberian / Latin patterns (Spain, Mexico, Argentina and others)
+        elif country in ["Spain", 'Mexico', 'Argentina']:
             prefixes = ["Real", "Atlético", "Deportivo"]
             name = f"{random.choice(prefixes)} {city}" if random.random() > 0.4 else f"{city} CF"
-        elif country in ["England", "Ireland", "Scotland", "USA"] and random.random() > 0.7:
-            suffixes = ["United", "City", "Town", "Rovers", "Athletic", "FC"]
-            name = f"{city} {random.choice(suffixes)}"
+
+        # Germany: common prefixes/suffixes like FC, SV, SC, VfL, Borussia
+        elif country == "Germany":
+            if random.random() > 0.6:
+                name = f"{random.choice(['Borussia','VfL','TSV'])} {fk.last_name()}"
+            else:
+                name = f"{city} {random.choice(['FC','SV','SC'])}"
+
+        # Italy: AC, AS, Calcio, common "Calcio" and small-club patterns
+        elif country == "Italy":
+            patterns = [f"AC {city}", f"{city} Calcio", f"{city} FC", f"AS {fk.last_name()}"]
+            name = random.choice(patterns)
+
+        # Austria: FK, SV, SC or 'Austria {city}'
+        elif country == "Austria":
+            if random.random() > 0.5:
+                name = f"{random.choice(['FK','SV','SC','Austria'])} {city}"
+            else:
+                name = f"{city} {random.choice(['FC','SC'])}"
+
+        # Brazil: Esporte Clube, Clube, Atlético, {city} FC
+        elif country == "Brazil":
+            patterns = [f"Esporte Clube {city}", f"{city} EC", f"Clube {city}", f"Atlético {city}", f"{city} FC"]
+            name = random.choice(patterns)
+
+        # Portugal: Sporting/Benfica style or simple 'FC {city}'
+        elif country == "Portugal":
+            patterns = [f"Sporting {city}", f"Benfica {fk.last_name()}", f"FC {city}", f"{city} SC"]
+            name = random.choice(patterns)
+
+        # Denmark: Boldklubben (BK), IF, FC
+        elif country == "Denmark":
+            name = f"{city} {random.choice(['BK','IF','FC','Boldklubben'])}"
+
+        # Sweden: IF, IK, BK, FF suffixes
+        elif country == "Sweden":
+            name = f"{city} {random.choice(['IF','IK','BK','FF'])}"
+
+        # France: Olympique, Stade, AS or simple FC
+        elif country == "France":
+            if random.random() > 0.4:
+                name = f"{random.choice(['Olympique','Stade','AS'])} {city}"
+            else:
+                name = f"{city} FC"
+
+        # Belgium: Koninklijke/KV/KRC/Racing prefixes
+        elif country == "Belgium":
+            if random.random() > 0.5:
+                name = f"{random.choice(['KV','KRC','Royal','Racing'])} {city}"
+            else:
+                name = f"{city} {random.choice(['FC','KV'])}"
+
+        # Australia: A-League patterns like 'FC', 'United', 'Wanderers', 'Mariners'
+        elif country == "Australia":
+            name = f"{city} {random.choice(['FC','United','Wanderers','Mariners','City'])}"
+
+        # Japan: J.League clubs often use 'FC', 'SC' or unique nicknames; keep plausible options
+        elif country == "Japan":
+            if random.random() > 0.6:
+                name = f"{city} {random.choice(['FC','SC'])}"
+            else:
+                name = f"{fk.last_name()} {random.choice(['Antlers','Frontale','Sanga','Grampus'])}"
+
+        # Saudi Arabia / Gulf: many clubs start with 'Al' (Al-Hilal, Al-Nassr...)
+        elif country in ["Saudi Arabia", "UAE", "Qatar", "Kuwait"]:
+            if random.random() > 0.6:
+                name = f"Al {fk.last_name()}"
+            else:
+                # hyphenated city form is also common in transliterations
+                name = f"Al-{city}"
+
+        # Netherlands: common 'FC' or 'VV' styling
+        elif country == "Netherlands":
+            name = f"{city} {random.choice(['FC','VV','SC'])}"
+
+        # Turkey: many clubs use 'SK' or unique names; provide 'SK' and some famous-sounding prefixes
+        elif country == "Turkey":
+            if random.random() > 0.8:
+                name = f"{random.choice(['Beşiktaş','Galatasaray','Fenerbahçe'])} {fk.last_name()}"
+            else:
+                name = f"{city} SK"
+
+        # Switzerland and similar: FC/SC or historical names
+        elif country == "Switzerland":
+            name = f"{city} {random.choice(['FC','SC','Grasshoppers'])}"
+
+        # Fallbacks: English-style or last-name-based club
         else:
-            name = f"{city} {fk.last_name()}s" 
+            if country in ["England", "Ireland", "Scotland", "USA"] and random.random() > 0.7:
+                suffixes = ["United", "City", "Town", "Rovers", "Athletic", "FC"]
+                name = f"{city} {random.choice(suffixes)}"
+            else:
+                name = f"{city} {fk.last_name()}s"
+
         names.add(name)
+
     return list(names)[:count]

@@ -46,7 +46,7 @@ class Player:
         self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
         
         self.age = random.randint(cfg.AGE_MIN, cfg.AGE_MAX)
-        self.overall = max(40, min(99, int(random.gauss(base_rating, 4))))
+        self.overall = max(cfg.BASE_RATING, min(99, int(random.gauss(base_rating, 4))))
         self.position = random.choice(["GK"]*3 + ["CB", "LB", "RB"]*5 + ["DM", "CM", "AM"]*5 + ["LW", "RW", "ST"]*4)
         self.jersey = None
         
@@ -93,11 +93,11 @@ class Player:
         base = self.overall
         if self.position == "GK":
             for s in ["Reflexes", "Positioning", "Handling", "Distribution", "Sweeping"]:
-                self.stats[s] = max(1, min(99, base + random.randint(-5, 10)))
+                self.stats[s] = max(cfg.BASE_RATING, min(99, base + random.randint(-8, 8)))
         else:
             # Outfield stats are index 5 onwards in the ALL_ATTRIBUTES list
             for s in ALL_ATTRIBUTES[5:]:
-                self.stats[s] = max(1, min(99, base + random.randint(-8, 8)))
+                self.stats[s] = max(cfg.BASE_RATING, min(99, base + random.randint(-8, 8)))
             
             # Positional bias logic
             cat = POS_MAP[self.position]
