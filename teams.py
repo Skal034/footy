@@ -88,6 +88,10 @@ locales = {
     
 }
 
+locales_to_be_romanized = {
+    "ja_JP", "ko_KR", "zh_CN", "bn_BD", "ar_DZ", "ar_SA", "ru_RU", "fa_IR", 
+    "he_IL", "el_GR", "ka_GE", "hy_AM", "uk_UA"}
+
 # --- 2. LEAGUES CONFIGURATION ---
 
 LEAGUES = {
@@ -122,12 +126,12 @@ class Team:
         """Star players get priority for iconic numbers; no duplicates allowed."""
         used = set()
         # High-rated players pick first
-        for p in sorted(self.players, key=lambda x: x.overall, reverse=True):
-            cat = p.POS_MAP[p.position]
+        for plr in sorted(self.players, key=lambda x: x.overall, reverse=True):
+            cat = p.POS_MAP[plr.position]
             assigned = False
             for num in p.SHIRT_PREFS[cat]:
                 if num not in used:
-                    p.jersey = num
+                    plr.jersey = num
                     used.add(num)
                     assigned = True
                     break
@@ -136,7 +140,7 @@ class Team:
                 while True:
                     rand_num = random.randint(1, 99)
                     if rand_num not in used:
-                        p.jersey = rand_num
+                        plr.jersey = rand_num
                         used.add(rand_num)
                         break
 

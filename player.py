@@ -24,7 +24,46 @@ ALL_ATTRIBUTES = [
 import random
 import teams
 import config_reader as cfg
+import asyncio
+import inspect
+import requests
 from deep_translator import GoogleTranslator
+from googletrans import Translator
+from functools import lru_cache
+
+translator = Translator()
+# Safe translation helper: makes an async or sync `translate` call behave
+# synchronously for callers here, with caching and a safe fallback.
+@lru_cache(maxsize=1024)
+def translate_to_en(text):
+    try:
+        res_or_coro = translator.translate(text, src='auto', dest='en')
+        # If the library returns a coroutine (async implementation), fall back
+        # to a synchronous HTTP request below to ensure completion.
+        if inspect.isawaitable(res_or_coro):
+            raise RuntimeError("async-translate")
+        res = res_or_coro
+        if res is None:
+            return text
+        return res.pronunciation
+    except Exception:
+        # Fallback: use unofficial Google Translate HTTP endpoint synchronously.
+        """
+        try:
+            url = "https://translate.googleapis.com/translate_a/single"
+            params = {
+                'client': 'gtx', 'sl': 'auto', 'tl': 'en', 'dt': 't', 'q': text
+            }
+            resp = requests.get(url, params=params, timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+            if data and isinstance(data, list) and data[0]:
+                translated = ''.join([seg[0] for seg in data[0] if seg and seg[0]])
+                return translated or text
+        except Exception:
+        """
+        return GoogleTranslator(source='auto', target='en').translate(text)
+    return text
 
 class Player:
     def __init__(self, team_name, league_config, base_rating):
@@ -40,10 +79,14 @@ class Player:
         # We combine first_name_male and last_name to avoid "Dr.", "PhD", etc.
         self.name = f"{fk.first_name_male()} {fk.last_name()}"
         # Only attempt translation/romanization for locales likely to need it
-        #if self.locale in ("ja_JP", "ko_KR", "zh_CN", "bn_BD", "ar_DZ", "ar_SA", 
-        #                   "ru_RU", "ka_GE", "he_IL", "hy_AM", "el_GR", "fa_IR",
-        #                   "uk_UA"):
-        self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
+        if self.locale in teams.locales_to_be_romanized:
+            name = self.name
+            # Try cached/safe translation; helper handles coroutine/sync differences
+            translated = translate_to_en(name)
+            self.name = translated
+            print(f"Transliterated from locale '{self.locale}' '{name}' to '{self.name}'.")
+        #self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
+
         
         self.age = random.randint(cfg.AGE_MIN, cfg.AGE_MAX)
         self.overall = max(cfg.BASE_RATING, min(99, int(random.gauss(base_rating, 4))))
