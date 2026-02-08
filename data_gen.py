@@ -5,7 +5,7 @@ import teams # Importing the teams module to access locales
 
 if __name__ == "__main__":
     full_db = []
-    print("Generating localized football universe...")
+    print("Generating football universe...")
 
     for l_id, conf in teams.LEAGUES.items():
         print(f"-> {conf['name']} ({conf['country']})")
@@ -13,8 +13,9 @@ if __name__ == "__main__":
         
         for i, t_name in enumerate(team_names):
             # Roughly distribute team strengths
-            s_tier = 1 if i < 3 else (3 if i > (conf['teams'] - 5) else 2)
-            team_obj = teams.Team(t_name, conf, s_tier)
+            team_tier = round(random.triangular(-2, 2, 0)) # More teams in the middle tiers
+            print(f"   - Team: {t_name} (Tier: {team_tier:.2f})")
+            team_obj = teams.Team(t_name, conf, team_tier)
             full_db.extend([p.to_dict() for p in team_obj.players])
 
     # Save to CSV using the keys of the first entry as headers
