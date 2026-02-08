@@ -103,8 +103,8 @@ locales_to_be_romanized = {
 #local_weight = fraction of local players (vs foreigners)
 LEAGUES = {
     "ENG_1": {"name": "Premier League", "country": "England", "rating": 91.0, "teams": 20, "local_weight": 0.55},
-    "ESP_1": {"name": "La Liga", "country": "Spain", "rating": 83.3, "teams": 20, "local_weight": 0.65},
-    "USA_1": {"name": "MLS", "country": "USA", "rating": 77.0, "teams": 18, "local_weight": 0.50},
+    #"ESP_1": {"name": "La Liga", "country": "Spain", "rating": 83.3, "teams": 20, "local_weight": 0.65},
+    #"USA_1": {"name": "MLS", "country": "USA", "rating": 77.0, "teams": 18, "local_weight": 0.50},
     "IND_1": {"name": "Indian Super League", "country": "India", "rating": 56.9, "teams": 12, "local_weight": 0.9},
 }
 
@@ -119,6 +119,17 @@ fake_factory = {nation: Faker(info['locale']) for nation, info in locales.items(
 # Helper: numeric FIFA points for each locale (extracted from locales)
 rating_points = {nation: info.get('rating') for nation, info in locales.items()}
 
+# Normalized locales from 40 to 100
+min_rating = min(rating_points.values())
+max_rating = max(rating_points.values())
+normalized_locales = {
+    nation: {
+        **locales[nation],
+        'normalized_rating': 40 + (rating_points[nation] - min_rating) / (max_rating - min_rating) * 60
+    }
+    for nation in locales.keys()
+}
+
 class Team:
     def __init__(self, name, league_config, team_rating):
         self.name = name
@@ -128,7 +139,8 @@ class Team:
         self.base_ovr = min(95,random.gauss(league_rating + 3*strength_variance*team_rating, strength_variance))
         
         # 30 players per squad
-        self.players = [p.Player(self.name, league_config, self.base_ovr + random.randint(-3, 3)) for _ in range(30)]
+        player_variance = cfg.PLAYER_STRENGTH_VARIANCE
+        self.players = [p.Player(self.name, league_config, self.base_ovr + random.randint(-1*player_variance, player_variance)) for _ in range(30)]
         self._assign_jerseys()
 
     def _assign_jerseys(self):
@@ -147,7 +159,7 @@ class Team:
             
             if not assigned:
                 while True:
-                    rand_num = random.randint(1, 99)
+                    rand_num = random.randint(1, 40)
                     if rand_num not in used:
                         plr.jersey = rand_num
                         used.add(rand_num)

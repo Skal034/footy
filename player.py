@@ -73,7 +73,7 @@ class Player:
         # Localized Player Nationality — bias selection by FIFA points and team quality
         # `_pick_nat` now returns a tuple: (country_name, locale_code)
         self.nationality, self.locale = self._pick_nat(league_config, base_rating)
-        fk = teams.fake_factory.get(self.nationality, teams.fake_factory['England'])
+        fk = teams.fake_factory.get(self.nationality, league_config['country'])
         
         # --- ENHANCED NAME GENERATION ---
         # We combine first_name_male and last_name to avoid "Dr.", "PhD", etc.
@@ -85,9 +85,7 @@ class Player:
             translated = translate_to_en(name)
             self.name = translated
             #print(f"Transliterated from locale '{self.locale}' '{name}' to '{self.name}'.")
-        #self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
 
-        
         self.age = random.randint(cfg.AGE_MIN, cfg.AGE_MAX)
         self.overall = max(cfg.BASE_RATING, min(99, int(random.gauss(base_rating, 4))))
         self.position = random.choice(["GK"]*3 + ["CB", "LB", "RB"]*5 + ["DM", "CM", "AM"]*5 + ["LW", "RW", "ST"]*4)
