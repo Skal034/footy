@@ -125,10 +125,10 @@ class Team:
         league_rating = league_config['rating']
         #team rating is capped to 95
         strength_variance = cfg.TEAM_STRENGTH_VARIANCE
-        base_team_ovr = min(95,random.gauss(league_rating + strength_variance*team_rating, strength_variance))
+        self.base_ovr = min(95,random.gauss(league_rating + strength_variance*team_rating, strength_variance))
         
         # 30 players per squad
-        self.players = [p.Player(self.name, league_config, base_team_ovr + random.randint(-3, 3)) for _ in range(30)]
+        self.players = [p.Player(self.name, league_config, self.base_ovr + random.randint(-3, 3)) for _ in range(30)]
         self._assign_jerseys()
 
     def _assign_jerseys(self):

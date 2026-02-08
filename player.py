@@ -84,7 +84,7 @@ class Player:
             # Try cached/safe translation; helper handles coroutine/sync differences
             translated = translate_to_en(name)
             self.name = translated
-            print(f"Transliterated from locale '{self.locale}' '{name}' to '{self.name}'.")
+            #print(f"Transliterated from locale '{self.locale}' '{name}' to '{self.name}'.")
         #self.name = GoogleTranslator(source='auto', target='en').translate(self.name)
 
         
@@ -119,7 +119,7 @@ class Player:
         nations = list(teams.locales.keys())
         # base multiplier: teams with higher base_rating slightly favour top nations
         base_mult = 1.0 + ((base_rating - 60) / 100.0)
-        weights = [max(1.0, teams.fifa_points.get(n) * base_mult) for n in nations]
+        weights = [max(1.0, teams.rating_points.get(n) * base_mult) for n in nations]
         total = sum(weights)
         # normalized selection
         r = random.random() * total

@@ -14,8 +14,8 @@ if __name__ == "__main__":
         for i, t_name in enumerate(team_names):
             # Roughly distribute team strengths
             team_tier = round(random.triangular(-2, 2, 0)) # More teams in the middle tiers
-            print(f"   - Team: {t_name} (Tier: {team_tier:.2f})")
             team_obj = teams.Team(t_name, conf, team_tier)
+            print(f"   - Team: {t_name} (Tier: {team_tier:.2f}) (Base OVR: {team_obj.base_ovr:.1f})")
             full_db.extend([p.to_dict() for p in team_obj.players])
 
     # Save to CSV using the keys of the first entry as headers
