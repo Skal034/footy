@@ -1,5 +1,5 @@
 # footy
-Football manager and simulator
+Football Database Generator 
 
 Package dependencies :
 1. Faker : for generating the actual fake player names as well as the fake city names based on the countries. The fake city names form the basis of the names of the football clubs
