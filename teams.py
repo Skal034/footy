@@ -159,7 +159,7 @@ class Team:
             
             if not assigned:
                 while True:
-                    rand_num = random.randint(1, 40)
+                    rand_num = random.randint(1, 40) # Kit numbers allowed up to 40
                     if rand_num not in used:
                         plr.jersey = rand_num
                         used.add(rand_num)

@@ -87,7 +87,13 @@ class Player:
             #print(f"Transliterated from locale '{self.locale}' '{name}' to '{self.name}'.")
 
         self.age = random.randint(cfg.AGE_MIN, cfg.AGE_MAX)
-        self.overall = max(cfg.BASE_RATING, min(99, int(random.gauss(base_rating, 4))))
+        max_rating = cfg.MAX_BASE_RATING
+        if (self.age < 18 or self.age > 37):
+            max_rating = min(max_rating, 80)  # Young and old players capped at 80 OVR
+        elif (self.age < 21 or self.age > 34):
+            max_rating = min(max_rating, 85)  # Slightly younger and slightly older players capped at 85 OVR
+        self.overall = max(cfg.MIN_BASE_RATING, 
+                           min(max_rating, int(random.gauss(base_rating, 4))))
         self.position = random.choice(["GK"]*3 + ["CB", "LB", "RB"]*5 + ["DM", "CM", "AM"]*5 + ["LW", "RW", "ST"]*4)
         self.jersey = None
         
@@ -100,7 +106,7 @@ class Player:
         
         # Standardized Attributes (The 5/15) - Initialized to 0 to prevent CSV errors
         self.stats = {attr: 0 for attr in ALL_ATTRIBUTES}
-        self._generate_stats()
+        self._generate_stats(max_rating)
 
     def _pick_nat(self, conf, base_rating):
         """Pick a nationality biased by league local_weight and FIFA points.
@@ -113,32 +119,32 @@ class Player:
         if random.random() < conf['local_weight']:
             country = conf['country']
             return country, teams.locales.get(country, {}).get('locale', 'en_GB')
+        
+        # Sort by normalized_rating in descending order
+        normalized_locales = dict(sorted(
+            teams.normalized_locales.items(), 
+            key=lambda x: (x[1]['normalized_rating'] - base_rating) ** 2
+        ))
+        nations_list = list(normalized_locales.items())
+        lambd = cfg.NATIONALITY_LAMBDA  # Adjust this to increase/decrease bias strength
+        index = len(nations_list)
+        while (index >= len(nations_list)):
+            index = round(random.expovariate(lambd))
+        nation, data = nations_list[index]
+        return nation, data.get('locale', 'en_GB')
 
-        nations = list(teams.locales.keys())
-        # base multiplier: teams with higher base_rating slightly favour top nations
-        base_mult = 1.0 + ((base_rating - 60) / 100.0)
-        weights = [max(1.0, teams.rating_points.get(n) * base_mult) for n in nations]
-        total = sum(weights)
-        # normalized selection
-        r = random.random() * total
-        upto = 0.0
-        for n, w in zip(nations, weights):
-            upto += w
-            if r <= upto:
-                return n, teams.locales.get(n, {}).get('locale', 'en_GB')
-        last = nations[-1]
-        return last, teams.locales.get(last, {}).get('locale', 'en_GB')
-
-    def _generate_stats(self):
+    def _generate_stats(self, max_rating):
         """Assigns ratings based on whether the player is a GK or Outfield player."""
         base = self.overall
         if self.position == "GK":
             for s in ["Reflexes", "Positioning", "Handling", "Distribution", "Sweeping"]:
-                self.stats[s] = max(cfg.BASE_RATING, min(99, base + random.randint(-8, 8)))
+                self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                    min(max_rating, base + random.randint(-8, 8)))
         else:
             # Outfield stats are index 5 onwards in the ALL_ATTRIBUTES list
             for s in ALL_ATTRIBUTES[5:]:
-                self.stats[s] = max(cfg.BASE_RATING, min(99, base + random.randint(-8, 8)))
+                self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                    min(max_rating, base + random.randint(-8, 8)))
             
             # Positional bias logic
             cat = POS_MAP[self.position]
