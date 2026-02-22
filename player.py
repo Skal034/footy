@@ -15,10 +15,9 @@ POS_MAP = {
 
 # Standardized attribute list to ensure every player row in the CSV has the same columns
 ALL_ATTRIBUTES = [
-    "Reflexes", "Positioning", "Handling", "Distribution", "Sweeping",
-    "Acceleration", "Sprint_Speed", "Stamina", "Strength", "Jumping_Reach",
-    "First_Touch", "Dribbling", "Short_Passing", "Long_Passing", "Finishing",
-    "Tackling", "Attacking_Awareness", "Defensive_Awareness", "Composure", "Work_Rate"
+    "Reflexes", "Handling", "Sweeping",  ## GK exclusive attributes
+    "Jumping", "Passing", "Acceleration", "Sprint_Speed", "Stamina", "Strength", "Composure", "Work_Rate", # Common attributes
+    "Dribbling", "Finishing", "Tackling", "Attacking_Awareness", "Defensive_Awareness" # Position specific attributes
 ]
 
 import random
@@ -100,8 +99,8 @@ class Player:
         # Meta Stats (The "3")
         self.meta = {
             "Weak_Foot": random.randint(1,5), 
-            "Injury_Proneness": random.randint(0,100), 
-            "Versatility": random.randint(0,100)
+            "Injury_Proneness": random.randint(1,5), 
+            "Versatility": random.randint(1,5)
         }
         
         # Standardized Attributes (The 5/15) - Initialized to 0 to prevent CSV errors
@@ -118,7 +117,7 @@ class Player:
         """
         if random.random() < conf['local_weight']:
             country = conf['country']
-            return country, teams.locales.get(country, {}).get('locale', 'en_GB')
+            return country, teams.locales.get(country, {}).get('locale')
         
         # Sort by normalized_rating in descending order
         normalized_locales = dict(sorted(
@@ -131,29 +130,71 @@ class Player:
         while (index >= len(nations_list)):
             index = round(random.expovariate(lambd))
         nation, data = nations_list[index]
-        return nation, data.get('locale', 'en_GB')
+        return nation, data.get('locale')
 
     def _generate_stats(self, max_rating):
         """Assigns ratings based on whether the player is a GK or Outfield player."""
         base = self.overall
         if self.position == "GK":
-            for s in ["Reflexes", "Positioning", "Handling", "Distribution", "Sweeping"]:
+            for s in ["Reflexes", "Handling", "Sweeping", "Jumping", "Passing"]:
                 self.stats[s] = max(cfg.MIN_BASE_RATING, 
                                     min(max_rating, base + random.randint(-8, 8)))
-        else:
-            # Outfield stats are index 5 onwards in the ALL_ATTRIBUTES list
             for s in ALL_ATTRIBUTES[5:]:
                 self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                    int(min(max_rating, base*0.5 + random.randint(-4, 4))))
+        else:
+            base_pos = POS_MAP[self.position]
+            #common_attrs = ALL_ATTRIBUTES[3:10]
+            for s in ALL_ATTRIBUTES[:3]:
+                self.stats[s] = cfg.MIN_BASE_RATING
+            for s in ALL_ATTRIBUTES[3:11]:
+                self.stats[s] = max(cfg.MIN_BASE_RATING, 
                                     min(max_rating, base + random.randint(-8, 8)))
-            
-            # Positional bias logic
-            cat = POS_MAP[self.position]
-            if cat == "DEF": 
-                self.stats["Tackling"] += 10
-                self.stats["Defensive_Awareness"] += 5
-            if cat == "FWD": 
-                self.stats["Finishing"] += 10
-                self.stats["Attacking_Awareness"] += 5
+            for s in ["Tackling", "Defensive_Awareness"]:
+                multiplier = 1.0
+                if base_pos == "DEF":
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+                if base_pos == "FWD":
+                    multiplier = 0.5
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+                if base_pos == "MID":
+                    if self.position == "DM":
+                        multiplier = 0.85
+                    else:
+                        multiplier = 0.75
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+            for s in ["Dribbling", "Finishing", "Attacking_Awareness"]:
+                multiplier = 1.0
+                if base_pos == "FWD":
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+                if base_pos == "MID":
+                    if self.position == "AM":
+                        multiplier = 0.85
+                    else:
+                        multiplier = 0.75
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+                if base_pos == "DEF":
+                    if self.position == "LB" or self.position == "RB":
+                        multiplier = 0.65
+                    else:
+                        multiplier = 0.5
+                    self.stats[s] = max(cfg.MIN_BASE_RATING, 
+                                        int(min(max_rating, base*multiplier + random.randint(-4, 4))))
+
+            if base_pos == "MID":
+                self.stats["Passing"] = max(cfg.MIN_BASE_RATING, 
+                                            int(min(max_rating, base + random.randint(-4, 4)))) 
+            if base_pos == "FWD":
+                self.stats["Passing"] = max(cfg.MIN_BASE_RATING, 
+                                            int(min(max_rating, base*0.75 + random.randint(-4, 4)))) 
+            if base_pos == "DEF":
+                self.stats["Passing"] = max(cfg.MIN_BASE_RATING, 
+                                            int(min(max_rating, base*0.75 + random.randint(-4, 4)   )))  
 
     def to_dict(self):
         """Merges all player data into a single flat dictionary for CSV."""
