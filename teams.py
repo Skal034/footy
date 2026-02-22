@@ -102,10 +102,51 @@ locales_to_be_romanized = {
 #teams = #of teams in the league, 
 #local_weight = fraction of local players (vs foreigners)
 LEAGUES = {
-    "ENG_1": {"name": "Premier League", "country": "England", "rating": 91.0, "teams": 20, "local_weight": 0.55},
-    #"ESP_1": {"name": "La Liga", "country": "Spain", "rating": 83.3, "teams": 20, "local_weight": 0.65},
-    #"USA_1": {"name": "MLS", "country": "USA", "rating": 77.0, "teams": 18, "local_weight": 0.50},
-    "IND_1": {"name": "Indian Super League", "country": "India", "rating": 56.9, "teams": 12, "local_weight": 0.9},
+    #europe
+    "ENG_1": {"name": "Premier League", "country": "England", "rating": 92.7, "teams": 20, "local_weight": 0.4},
+    "ENG_2": {"name": "Championship", "country": "England", "rating": 83.0, "teams": 24, "local_weight": 0.65},
+    "ESP_1": {"name": "La Liga", "country": "Spain", "rating": 86.3, "teams": 20, "local_weight": 0.48},
+    "ESP_2": {"name": "La Liga 2", "country": "Spain", "rating": 78.6, "teams": 22, "local_weight": 0.7},
+    "FRA_1": {"name": "Ligue 1", "country": "France", "rating": 85.2, "teams": 20, "local_weight": 0.5},
+    "FRA_2": {"name": "Ligue 2", "country": "France", "rating": 76.7, "teams": 20, "local_weight": 0.7},
+    "GER_1": {"name": "Bundesliga", "country": "Germany", "rating": 86.7, "teams": 18, "local_weight": 0.45},
+    "GER_2": {"name": "2. Bundesliga", "country": "Germany", "rating": 79.0, "teams": 18, "local_weight": 0.68},
+    "ITA_1": {"name": "Serie A", "country": "Italy", "rating": 86.4, "teams": 20, "local_weight": 0.5},
+    "ITA_2": {"name": "Serie B", "country": "Italy", "rating": 77.6, "teams": 20, "local_weight": 0.75},
+    "POR_1": {"name": "Primeira Liga", "country": "Portugal", "rating": 82.0, "teams": 18, "local_weight": 0.65},
+    "POR_2": {"name": "Segunda Liga", "country": "Portugal", "rating": 74.4, "teams": 20, "local_weight": 0.8},
+    "NLD_1": {"name": "Eredivisie", "country": "Netherlands", "rating": 79.0, "teams": 18, "local_weight": 0.7},
+    "BEL_1": {"name": "Jupiler Pro League", "country": "Belgium", "rating": 82.8, "teams": 16, "local_weight": 0.8},
+    "DEN_1": {"name": "Superliga", "country": "Denmark", "rating": 81.0, "teams": 16, "local_weight": 0.75},
+    "NOR_1": {"name": "Eliteserien", "country": "Norway", "rating": 79.1, "teams": 16, "local_weight": 0.8},
+    "SWE_1": {"name": "Allsvenskan", "country": "Sweden", "rating": 77.6, "teams": 16, "local_weight": 0.8},
+    "SCO_1": {"name": "Scottish Premiership", "country": "Scotland", "rating": 76.9, "teams": 14, "local_weight": 0.65},
+    "IRE_1": {"name": "Irish League", "country": "Ireland", "rating": 72.1, "teams": 14, "local_weight": 0.87},
+    "POL_1": {"name": "Polish Ekstraklasa", "country": "Poland", "rating": 80.4, "teams": 20, "local_weight": 0.78},
+    "CZE_1": {"name": "Czech First League", "country": "Czechia", "rating": 78.7, "teams": 16, "local_weight": 0.75},
+    "RUS_1": {"name": "Russian Premier League", "country": "Russia", "rating": 78.5, "teams": 18, "local_weight": 0.75},
+    "TUR_1": {"name": "Turkish Süper Lig", "country": "Turkey", "rating": 79.3, "teams": 18, "local_weight": 0.70},
+    "SUI_1": {"name": "Swiss Super League", "country": "Switzerland", "rating": 78.8, "teams": 10, "local_weight": 0.71},
+    "AUT_1": {"name": "Austrian Bundesliga", "country": "Austria", "rating": 77.5, "teams": 12, "local_weight": 0.76},
+    
+
+    #north america
+    "USA_1": {"name": "MLS", "country": "USA", "rating": 80.3, "teams": 18, "local_weight": 0.50},
+    "MEX_1": {"name": "Liga MX", "country": "Mexico", "rating": 78.3, "teams": 18, "local_weight": 0.68},
+
+    #south america
+    "ARG_1": {"name": "Liga Profesional Argentina", "country": "Argentina", "rating": 82.0, "teams": 20, "local_weight": 0.8},
+    "BRA_1": {"name": "Brazilian Serie A", "country": "Brazil", "rating": 81.8, "teams": 20, "local_weight": 0.8},
+    "BRA_2": {"name": "Brazilian Serie B", "country": "Brazil", "rating": 71.2, "teams": 20, "local_weight": 0.92},
+    "CHL_1": {"name": "Chilean League", "country": "Chile", "rating": 77.4, "teams": 20, "local_weight": 0.86},
+    "COL_1": {"name": "Colombian League", "country": "Colombia", "rating": 79.9, "teams": 20, "local_weight": 0.83},
+
+    #asia and oceania
+    "IND_1": {"name": "Indian Super League", "country": "India", "rating": 64.0, "teams": 12, "local_weight": 0.9},
+    "AUS_1": {"name": "A-League", "country": "Australia", "rating": 73.2, "teams": 10, "local_weight": 0.89},
+    "JPN_1": {"name": "J. League", "country": "Japan", "rating": 79.2, "teams": 18, "local_weight": 0.91},
+    "KOR_1": {"name": "K League 1", "country": "South Korea", "rating": 75.9, "teams": 12, "local_weight": 0.95},
+    "SAU_1": {"name": "Saudi Professional League", "country": "Saudi Arabia", "rating": 77.1, "teams": 16, "local_weight": 0.65},
 }
 
 import random
@@ -174,7 +215,8 @@ def generate_league_team_names(country, count):
 
     cities = []
     while len(set(cities)) < count:
-        cities.append(fk.city())
+        city_name = p.translate_to_en(fk.city()) if fk.locale in locales_to_be_romanized else fk.city()
+        cities.append(city_name)
     # preserve order while deduplicating
     cities = list(dict.fromkeys(cities))
 
